@@ -10,7 +10,7 @@ ArgParser argparser_create(const char *name, const char *description, const char
     parser.epilouge = epilouge;
 
     ArgumentOption help = {0};
-    help.short_name = "-h";
+    help.name = "-h";
     help.long_name = "help";
     help.argument_description = "shows this help text";
     help.type = ARG_BOOL;
@@ -20,55 +20,65 @@ ArgParser argparser_create(const char *name, const char *description, const char
 }
 */
 
-/* TODO Write a hash table to store everything from argv in see if its faster*/
-void argparser_parse(ArgumentOption *args, int argc, const char *argv[]) {
-    /* go over arguments and store where options are in argc in ArgumentOption with the argvalue as a map */
-    for (ArgumentOption *i = args;i->type != ARG_END;i++) {
-        switch (i->type) {
+/* TODO Write a hash table to store everything from argv in and see if its faster*/
+void argparser_parse(ArgumentOption *args, int args_array_size, int argc, const char *argv[]) {
+    for (int i = 0;i < args_array_size;i++)  {
+        switch (args[i].type) {
             case ARG_BOOL: {
-                bool *result;
+                int *result = (int *)(args[i].result);
                 *result = 0;
-                for (int arg = 0;arg < argc;arg++) {
-                    /* check if first character in arg is equal to ASCII for '-' */
-                    if (*argv[arg] == 45) {
-                        for (const char *option = argv[arg]; option != 0; ++option) {
-                            if (option == i->short_name || option == i->long_name) {
-                                *result = 1;
-                            }
-                        }
+                for (int arg = 0;arg < argc;++arg) {
+                    if (strcmp(args[i].name, argv[arg]) == 0) {
+                        *result = 1;
+                        args[i].result = result;
+                        break;
                     }
-                }
-                i->result = result;  
+                } 
             } break;
 
             case ARG_INT: {
-                int *result = (int *)(i->result);
-                *result = 0;
-                for (int arg = 0;arg < argc;arg++) {
-                    if (strcmp(argv[arg], i->short_name) == 0) {
-                        *result = strtol(argv[arg+1], NULL, 10);
+                int *result = (int *)(args[i].result);
+                args[i].result = NULL;
+                for (int arg = 0;arg < argc;++arg) {
+                    if (strcmp(args[i].name, argv[arg]) == 0) {
+                        /* no more arguments so break */
+                        if (arg+1 == argc) {
+                            break; 
+                        }
+                        *result = strtol(argv[++arg], NULL, 10);
+                        args[i].result = result;
                         break;
                     }
                 } 
             } break;
 
             case ARG_FLOAT: {
-                double *result = (double *)(i->result);     
-                *result = 0;
-                for (int arg = 0;arg < argc;arg++) {
-                    if (strcmp(argv[arg], i->short_name) == 0) {
-                        *result = strtod(argv[arg+1], NULL);
+                double *result = (double *)(args[i].result);     
+                args[i].result = NULL;
+                for (int arg = 0;arg < argc;++arg) {
+                    if (strcmp(args[i].name, argv[arg]) == 0) {
+                        if (arg+1 == argc) {
+                            break; 
+                        }
+
+                        *result = strtod(argv[++arg],NULL);
+                        args[i].result = result;
                         break;
                     }
                 }
             } break;
 
             case ARG_STRING: {
-                const char *result = (const char *)i->result;
-                for (int arg = 0; arg < argc;arg++) {
-                    if (strcmp(argv[arg], i->short_name) == 0) {
-                        i->result = argv[arg+1];
+                for (int arg = 0; arg < argc;++arg) {
+                    args[i].result = NULL;
+                    if (strcmp(args[i].name, argv[arg]) == 0) {
+                        if (arg+1 == argc) {
+                            break; 
+                        }
+                        args[i].result = argv[++arg];
                         break;
+                    }
+                    else {
                     }
                 }
             } break;
