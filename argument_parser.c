@@ -21,7 +21,31 @@ ArgParser argparser_create(const char *name, const char *description, const char
 */
 
 /* TODO Write a hash table to store everything from argv in and see if its faster*/
-void argparser_parse(ArgumentOption *args, int args_array_size, int argc, const char *argv[]) {
+int parse_argoption_name_isvalid(const char * arg_option_name, 
+        const char **argv, 
+        int argc, int arg) {
+   
+    /* if no next argument return false */
+    if (arg+1 == argc) {
+        return 0;
+    }   
+    
+    /* if next argument is the start of another retunrn false */
+    if (*argv[arg+1] == 45) {
+        return 0;
+    }
+
+    if (strcmp(arg_option_name, argv[arg]) == 0) {
+        return 1;
+    }
+
+    return 0;
+}
+
+void argparser_parse(ArgParserArgOption *args, 
+        int args_array_size, 
+        int argc, const char *argv[]) {
+
     for (int i = 0;i < args_array_size;i++)  {
         switch (args[i].type) {
             case ARG_BOOL: {
@@ -37,30 +61,23 @@ void argparser_parse(ArgumentOption *args, int args_array_size, int argc, const 
             } break;
 
             case ARG_INT: {
-                int *result = (int *)(args[i].result);
+                long *result = (long *)(args[i].result);
                 args[i].result = NULL;
                 for (int arg = 0;arg < argc;++arg) {
-                    if (strcmp(args[i].name, argv[arg]) == 0) {
-                        /* no more arguments so break */
-                        if (arg+1 == argc) {
-                            break; 
-                        }
+                    if (parse_argoption_name_isvalid(args[i].name, argv, argc, arg)) {
                         *result = strtol(argv[++arg], NULL, 10);
                         args[i].result = result;
                         break;
                     }
-                } 
-            } break;
+                }
+            } break; 
 
             case ARG_FLOAT: {
                 double *result = (double *)(args[i].result);     
                 args[i].result = NULL;
                 for (int arg = 0;arg < argc;++arg) {
-                    if (strcmp(args[i].name, argv[arg]) == 0) {
-                        if (arg+1 == argc) {
-                            break; 
-                        }
 
+                    if (parse_argoption_name_isvalid(args[i].name, argv, argc, arg)) {
                         *result = strtod(argv[++arg],NULL);
                         args[i].result = result;
                         break;
@@ -69,16 +86,11 @@ void argparser_parse(ArgumentOption *args, int args_array_size, int argc, const 
             } break;
 
             case ARG_STRING: {
+                args[i].result = NULL;
                 for (int arg = 0; arg < argc;++arg) {
-                    args[i].result = NULL;
-                    if (strcmp(args[i].name, argv[arg]) == 0) {
-                        if (arg+1 == argc) {
-                            break; 
-                        }
+                    if (parse_argoption_name_isvalid(args[i].name, argv, argc, arg)) {
                         args[i].result = argv[++arg];
                         break;
-                    }
-                    else {
                     }
                 }
             } break;

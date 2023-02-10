@@ -1,12 +1,12 @@
 #ifndef ARGUMENT_PARSER_H_
 #define ARGUMENT_PARSER_H_
 
-typedef enum ArgumentArgType {
+typedef enum ArgParserArgOptionType {
     ARG_BOOL,
     ARG_INT,
     ARG_FLOAT,
     ARG_STRING,
-} ArgumentArgType;
+} ArgParserArgOptionType;
 
 /* Argument
  * short_name: name of argument begining with '-'
@@ -15,13 +15,13 @@ typedef enum ArgumentArgType {
  * ArgType: enum member of ArgType
  */
 
-typedef struct ArgumentOption {
+typedef struct ArgParserArgOption {
     const char *name;
-    ArgumentArgType type;
+    ArgParserArgOptionType type;
     void *result;
-} ArgumentOption;
+} ArgParserArgOption;
 
-extern void argparser_parse(ArgumentOption *args, int args_array_size, int argc, const char *argv[]); 
+extern void argparser_parse(ArgParserArgOption *args, int args_array_size, int argc, const char *argv[]); 
 /* parses argument and returns value into result */
 
 #endif
